@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>صندوق الجواهر والدردشة - Iron Fire</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0b132b;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        #appContainer {
+            width: 100%;
+            max-width: 420px;
+            height: 100vh;
+            max-height: 850px;
+            background: #1c2541;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 30px rgba(0,0,0,0.8);
+            position: relative;
+            overflow: hidden;
+            border-radius: 15px;
+        }
+        header {
+            background: #0b132b;
+            padding: 12px;
+            text-align: center;
+            border-bottom: 2px solid #3a506b;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 18px;
+            color: #ffea00;
+        }
+        .gems-dashboard {
+            background: #3a506b;
+            padding: 10px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: #ffd700;
+            border-bottom: 2px solid #475569;
+        }
+        .content {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .card {
+            background: #0b132b;
+            border: 1px solid #3a506b;
+            border-radius: 15px;
+            padding: 15px;
+            width: 100%;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+        .btn {
+            background: #38b000;
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 12px;
+            transition: background 0.2s, transform 0.1s;
+            box-shadow: 0 4px 15px rgba(56, 176, 0, 0.4);
+        }
+        .btn:hover { background: #2d8a00; }
+        .btn:active { transform: scale(0.98); }
+        .btn-exchange { background: #ff0055; box-shadow: 0 4px 15px rgba(255, 0, 85, 0.4); }
+        .btn-exchange:hover { background: #d50000; }
+        .btn:disabled { background: #475569; cursor: not-allowed; box-shadow: none; }
+
+        .gift-box-container {
+            font-size: 65px;
+            margin: 10px 0;
+            animation: bounce 2s infinite ease-in-out;
+            filter: drop-shadow(0 0 15px rgba(255, 234, 0, 0.6));
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        #timerText {
+            font-size: 12px;
+            color: #ff4757;
+            margin-top: 8px;
+            font-weight: bold;
+        }
+        .code-box {
+            background: #1c2541;
+            border: 1px dashed #6fffe9;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #6fffe9;
+            margin-top: 8px;
+            word-break: break-all;
+        }
+
+        /* تصميم الشات المباشر */
+        .chat-box {
+            height: 140px;
+            background: #1c2541;
+            border: 1px solid #3a506b;
+            border-radius: 8px;
+            padding: 8px;
+            overflow-y: auto;
+            text-align: right;
+            font-size: 13px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .chat-msg {
+            background: #0b132b;
+            padding: 6px 10px;
+            border-radius: 6px;
+            word-break: break-word;
+        }
+        .chat-msg span {
+            color: #ffea00;
+            font-weight: bold;
+        }
+        .chat-input-group {
+            display: flex;
+            gap: 6px;
+            margin-top: 8px;
+        }
+        .chat-input-group input {
+            flex: 1;
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid #3a506b;
+            background: #1c2541;
+            color: white;
+            outline: none;
+            user-select: auto;
+        }
+        .chat-input-group button {
+            background: #00b4d8;
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<div id="appContainer">
+    <header>
+        <h1>💎 شحن جواهر - Iron Fire 🎯</h1>
+    </header>
+
+    <div class="gems-dashboard">
+        رصيدك: <span id="gemsCount">0</span> / 2000 💎
+    </div>
+
+    <div class="content">
+        <!-- قسم الصندوق اليومي -->
+        <div class="card">
+            <h3 style="margin:0 0 5px 0; color:#ffea00;">صندوق الهدية الكبرى 🎁</h3>
+            <p style="font-size: 11px; color: #94a3b8; margin: 0 0 5px 0;">افتح الهدية كل 5 ساعات! (نسبة 1% لربح 2000 جوهرة!)</p>
+            
+            <div class="gift-box-container">🎁</div>
+
+            <button class="btn" id="claimBtn" onclick="openGiftBox()">فتح الهدية الآن 🔥</button>
+            <div id="timerText"></div>
+        </div>
+
+        <!-- قسم الشات الأونلاين المباشر -->
+        <div class="card">
+            <h3 style="margin:0 0 5px 0; color:#00b4d8;">💬 الدردشة المباشرة للاعبين</h3>
+            <div class="chat-box" id="chatBox">
+                <div class="chat-msg"><span>المشرف:</span> مرحباً بكم في تطبيق جواهر Iron Fire! 🎉</div>
+            </div>
+            <div class="chat-input-group">
+                <input type="text" id="chatInput" placeholder="اكتب رسالة..." onkeydown="if(event.key==='Enter') sendMsg()">
+                <button onclick="sendMsg()">إرسال</button>
+            </div>
+        </div>
+
+        <!-- قسم الكود -->
+        <div class="card">
+            <h3 style="margin:0 0 5px 0; color:#6fffe9;">🔥 كود شحن Iron Fire</h3>
+            <p style="font-size: 12px; color: #cbd5e1; margin: 4px 0;">عند وصولك إلى <b>2000 جوهرة</b>، استبدلها لتوليد كودك العشوائي!</p>
+            <button class="btn btn-exchange" id="exchangeBtn" onclick="generateCode()">توليد كود الاستبدال 🎟️</button>
+            <div id="codeDisplay" style="display:none;" class="code-box"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let gems = localStorage.getItem('iron_app_gems') ? parseInt(localStorage.getItem('iron_app_gems')) : 100;
+    let lastGiftDate = localStorage.getItem('iron_last_gift') ? parseInt(localStorage.getItem('iron_last_gift')) : 0;
+    let savedCode = localStorage.getItem('iron_user_code');
+    let userId = localStorage.getItem('iron_user_id') || 'لاعب_' + Math.floor(100 + Math.random() * 900);
+    localStorage.setItem('iron_user_id', userId);
+
+    function updateUI() {
+        document.getElementById('gemsCount').innerText = gems;
+        localStorage.setItem('iron_app_gems', gems);
+
+        if (savedCode) {
+            let display = document.getElementById('codeDisplay');
+            display.style.display = "block";
+            display.innerHTML = `<b>كودك العشوائي الخاص:</b><br><span style="font-size:16px; color:#ffd700;">${savedCode}</span><br><small>(احتفظ به لتضعه في لعبة Iron Fire!)</small>`;
+            document.getElementById('exchangeBtn').disabled = true;
+            document.getElementById('exchangeBtn').innerText = "تم توليد الكود بنجاح ✔️";
+        }
+    }
+    updateUI();
+
+    const FIVE_HOURS = 5 * 60 * 60 * 1000;
+    function checkGiftAvailability() {
+        let now = new Date().getTime();
+        let timePassed = now - lastGiftDate;
+
+        if (timePassed < FIVE_HOURS) {
+            let timeLeft = FIVE_HOURS - timePassed;
+            let hours = Math.floor(timeLeft / (1000 * 60 * 60));
+            let minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+            
+            document.getElementById('claimBtn').disabled = true;
+            document.getElementById('timerText').innerText = `⏰ متبقي لفتح الهدية القادمة: ${hours} س و ${minutes} د`;
+            return false;
+        } else {
+            document.getElementById('claimBtn').disabled = false;
+            document.getElementById('timerText').innerText = "✨ الهدية الكبرى جاهزة للفتح الآن!";
+            return true;
+        }
+    }
+    checkGiftAvailability();
+    setInterval(checkGiftAvailability, 60000);
+
+    function openGiftBox() {
+        if (!checkGiftAvailability()) return;
+
+        let wonGems = 0;
+        let randomChance = Math.random() * 100;
+
+        if (randomChance < 1) {
+            wonGems = 2000;
+            alert("🌟 حظ أسطوري خارق! 🌟\nربحت الجائزة الكبرى: 2000 جوهرة ضربة واحدة! 🔥🎉");
+        } else {
+            const normalPrizes = [50, 75, 100, 120, 150, 180, 200];
+            wonGems = normalPrizes[Math.floor(Math.random() * normalPrizes.length)];
+            alert(`🎉 مبروك! فتحت الصندوق وربحت ${wonGems} جوهرة.`);
+        }
+
+        gems += wonGems;
+        updateUI();
+
+        lastGiftDate = new Date().getTime();
+        localStorage.setItem('iron_last_gift', lastGiftDate);
+
+        checkGiftAvailability();
+    }
+
+    function generateCode() {
+        if (gems >= 2000) {
+            gems -= 2000;
+            savedCode = "IRON-" + Math.floor(100000 + Math.random() * 900000);
+            localStorage.setItem('iron_user_code', savedCode);
+            updateUI();
+            alert(`🎉 مبروك! تم خصم 2000 جوهرة وتوليد كودك العشوائي الخاص.`);
+        } else {
+            let needed = 2000 - gems;
+            alert(`عذراً، تحتاج إلى ${needed} جوهرة إضافية لتوليد كود الشحن!`);
+        }
+    }
+
+    // برمجة نظام الشات المباشر (Broadcast Channel + Local Storage)
+    const chatChannel = new BroadcastChannel('iron_fire_global_chat');
+    
+    function addMessageToBox(sender, text) {
+        let chatBox = document.getElementById('chatBox');
+        let msgDiv = document.createElement('div');
+        msgDiv.className = 'chat-msg';
+        msgDiv.innerHTML = `<span>${sender}:</span> ${text}`;
+        chatBox.appendChild(msgDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function sendMsg() {
+        let input = document.getElementById('chatInput');
+        let text = input.value.trim();
+        if (!text) return;
+
+        addMessageToBox(userId, text);
+        chatChannel.postMessage({ sender: userId, text: text });
+        input.value = '';
+    }
+
+    chatChannel.onmessage = (event) => {
+        addMessageToBox(event.data.sender, event.data.text);
+    };
+</script>
+
+</body>
+</html>
