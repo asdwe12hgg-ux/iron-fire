@@ -118,9 +118,9 @@
             word-break: break-all;
         }
 
-        /* تصميم الشات المباشر */
+        /* تصميم الشات والبحث عن الأصدقاء */
         .chat-box {
-            height: 140px;
+            height: 130px;
             background: #1c2541;
             border: 1px solid #3a506b;
             border-radius: 8px;
@@ -131,6 +131,7 @@
             display: flex;
             flex-direction: column;
             gap: 6px;
+            margin-bottom: 8px;
         }
         .chat-msg {
             background: #0b132b;
@@ -142,10 +143,21 @@
             color: #ffea00;
             font-weight: bold;
         }
+        .search-box {
+            width: 100%;
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid #3a506b;
+            background: #1c2541;
+            color: white;
+            outline: none;
+            margin-bottom: 8px;
+            font-size: 13px;
+            user-select: auto;
+        }
         .chat-input-group {
             display: flex;
             gap: 6px;
-            margin-top: 8px;
         }
         .chat-input-group input {
             flex: 1;
@@ -191,14 +203,19 @@
             <div id="timerText"></div>
         </div>
 
-        <!-- قسم الشات الأونلاين المباشر -->
+        <!-- قسم الشات والبحث عن الأصدقاء -->
         <div class="card">
-            <h3 style="margin:0 0 5px 0; color:#00b4d8;">💬 الدردشة المباشرة للاعبين</h3>
+            <h3 style="margin:0 0 5px 0; color:#00b4d8;">💬 دردشة اللاعبين والبحث عن صديق</h3>
+            
+            <!-- خانة البحث عن صديق أو رسالة -->
+            <input type="text" id="searchBox" class="search-box" placeholder="🔍 ابحث عن اسم صديق أو رسالة..." oninput="filterChat()">
+
             <div class="chat-box" id="chatBox">
-                <div class="chat-msg"><span>المشرف:</span> مرحباً بكم في تطبيق جواهر Iron Fire! 🎉</div>
+                <!-- الرسائل المحفوظة -->
             </div>
+
             <div class="chat-input-group">
-                <input type="text" id="chatInput" placeholder="اكتب رسالة..." onkeydown="if(event.key==='Enter') sendMsg()">
+                <input type="text" id="chatInput" placeholder="اكتب رسالتك لصديقك..." onkeydown="if(event.key==='Enter') sendMsg()">
                 <button onclick="sendMsg()">إرسال</button>
             </div>
         </div>
@@ -214,11 +231,34 @@
 </div>
 
 <script>
+    // --- نظام فحص قاعدة البيانات المحلية والأونلاين للاسم (يجب أن يكون 8 حروف وغير مكرر) ---
+    let registeredUsers = JSON.parse(localStorage.getItem('iron_registered_users')) || [];
+    let myUsername = localStorage.getItem('iron_my_username');
+
+    if (!myUsername) {
+        while (!myUsername) {
+            let inputName = prompt("🎮 أهلاً بك في Iron Fire!\nالرجاء إدخال اسمك الخاص (يجب أن يكون 8 حروف تماماً وألا يكون مكرراً في قاعدة البيانات):");
+            if (inputName) {
+                inputName = inputName.trim();
+                if (inputName.length !== 8) {
+                    alert("❌ عذراً، يجب أن يكون اسمك مكوناً من 8 حروف تماماً! حاول مرة أخرى.");
+                } else if (registeredUsers.includes(inputName)) {
+                    alert("❌ هذا الاسم موجود مسبقاً في قاعدة البيانات ومستخدم من قبل لاعب آخر، اختر اسماً فريداً!");
+                } else {
+                    myUsername = inputName;
+                    registeredUsers.push(myUsername);
+                    localStorage.setItem('iron_registered_users', JSON.stringify(registeredUsers));
+                    localStorage.setItem('iron_my_username', myUsername);
+                    alert("✅ تم التحقق من الاسم بنجاح وتم ربطه بقاعدة البيانات!");
+                    break;
+                }
+            }
+        }
+    }
+
     let gems = localStorage.getItem('iron_app_gems') ? parseInt(localStorage.getItem('iron_app_gems')) : 100;
     let lastGiftDate = localStorage.getItem('iron_last_gift') ? parseInt(localStorage.getItem('iron_last_gift')) : 0;
     let savedCode = localStorage.getItem('iron_user_code');
-    let userId = localStorage.getItem('iron_user_id') || 'لاعب_' + Math.floor(100 + Math.random() * 900);
-    localStorage.setItem('iron_user_id', userId);
 
     function updateUI() {
         document.getElementById('gemsCount').innerText = gems;
@@ -293,31 +333,56 @@
         }
     }
 
-    // برمجة نظام الشات المباشر (Broadcast Channel + Local Storage)
+    // --- نظام الشات والتعليقات المحفوظة نهائياً ---
+    let chatMessages = JSON.parse(localStorage.getItem('iron_saved_chat')) || [
+        { sender: "المشرف", text: "أهلاً بك يا " + myUsername + " في قاعدة بيانات Iron Fire للدردشة! 🎯" }
+    ];
+
     const chatChannel = new BroadcastChannel('iron_fire_global_chat');
-    
-    function addMessageToBox(sender, text) {
+
+    function renderChat(filterText = "") {
         let chatBox = document.getElementById('chatBox');
-        let msgDiv = document.createElement('div');
-        msgDiv.className = 'chat-msg';
-        msgDiv.innerHTML = `<span>${sender}:</span> ${text}`;
-        chatBox.appendChild(msgDiv);
+        chatBox.innerHTML = "";
+
+        let filtered = chatMessages.filter(msg => 
+            msg.sender.toLowerCase().includes(filterText.toLowerCase()) || 
+            msg.text.toLowerCase().includes(filterText.toLowerCase())
+        );
+
+        filtered.forEach(msg => {
+            let msgDiv = document.createElement('div');
+            msgDiv.className = 'chat-msg';
+            msgDiv.innerHTML = `<span>${msg.sender}:</span> ${msg.text}`;
+            chatBox.appendChild(msgDiv);
+        });
         chatBox.scrollTop = chatBox.scrollHeight;
     }
+    renderChat();
 
     function sendMsg() {
         let input = document.getElementById('chatInput');
         let text = input.value.trim();
         if (!text) return;
 
-        addMessageToBox(userId, text);
-        chatChannel.postMessage({ sender: userId, text: text });
+        let newMsg = { sender: myUsername, text: text };
+        chatMessages.push(newMsg);
+        localStorage.setItem('iron_saved_chat', JSON.stringify(chatMessages));
+
+        chatChannel.postMessage(newMsg);
+        renderChat();
         input.value = '';
     }
 
     chatChannel.onmessage = (event) => {
-        addMessageToBox(event.data.sender, event.data.text);
+        chatMessages.push(event.data);
+        localStorage.setItem('iron_saved_chat', JSON.stringify(chatMessages));
+        renderChat(document.getElementById('searchBox').value);
     };
+
+    function filterChat() {
+        let query = document.getElementById('searchBox').value;
+        renderChat(query);
+    }
 </script>
 
 </body>
